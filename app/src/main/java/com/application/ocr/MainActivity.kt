@@ -4,6 +4,10 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.graphics.Matrix
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.Rect
 import android.graphics.YuvImage
 import android.os.Bundle
@@ -59,6 +63,7 @@ class MainActivity : AppCompatActivity() {
     private val similaritySampleSize = 32
     private val initialFocusFraction = 0.85f
     private val verticalTrimFactor = 0.85f
+    private val contrastEnhancementFactor = 1.3f
     @Volatile
     private var activeZoomRect: Rect? = null
     private val confirmationThreshold = 2
@@ -226,15 +231,17 @@ class MainActivity : AppCompatActivity() {
         val bitmapBuffer = imageProxyToBitmap(imageProxy)
         val rotationDegrees = imageProxy.imageInfo.rotationDegrees
         val rotatedBitmap = rotateBitmap(bitmapBuffer, rotationDegrees)
-        val rawResult = recognizeTextBlocking(rotatedBitmap)
-        val rawText = rawResult?.let { plateFilter.filterVisibleText(it, rotatedBitmap.width, rotatedBitmap.height) }
-        val algorithmResult = rawResult?.let { plateFilter.computeAlgorithmResult(it, rotatedBitmap.width, rotatedBitmap.height) }
+//        val rawResult = recognizeTextBlocking(rotatedBitmap)
+        val processedBitmap = enhanceContrast(rotatedBitmap, contrastEnhancementFactor)
+        val rawResult = recognizeTextBlocking(processedBitmap)
+        val rawText = rawResult?.let { plateFilter.filterVisibleText(it, processedBitmap.width, processedBitmap.height) }
+        val algorithmResult = rawResult?.let { plateFilter.computeAlgorithmResult(it, processedBitmap.width, processedBitmap.height) }
         runOnUiThread {
             postRawText(rawText)
             postAlgorithmResult(algorithmResult)
         }
 
-        val zoomResult = zoomInOnSingleLine(rotatedBitmap)
+        val zoomResult = zoomInOnSingleLine(processedBitmap)
         if (zoomResult == null) {
             imageProxy.close()
             isProcessingFrame = false
@@ -269,23 +276,14 @@ class MainActivity : AppCompatActivity() {
             imageProxy.close()
             return
         }
-        val mediaImage = imageProxy.image
-        if (mediaImage == null) {
-            imageProxy.close()
-            return
-        }
         isProcessingFrame = true
         val rotationDegrees = imageProxy.imageInfo.rotationDegrees
-        val rotatedWidth: Int
-        val rotatedHeight: Int
-        if (rotationDegrees % 180 == 0) {
-            rotatedWidth = imageProxy.width
-            rotatedHeight = imageProxy.height
-        } else {
-            rotatedWidth = imageProxy.height
-            rotatedHeight = imageProxy.width
-        }
-        val inputImage = InputImage.fromMediaImage(mediaImage, rotationDegrees)
+        val bitmapBuffer = imageProxyToBitmap(imageProxy)
+        val rotatedBitmap = rotateBitmap(bitmapBuffer, rotationDegrees)
+        val processedBitmap = enhanceContrast(rotatedBitmap, contrastEnhancementFactor)
+        val rotatedWidth = processedBitmap.width
+        val rotatedHeight = processedBitmap.height
+        val inputImage = InputImage.fromBitmap(processedBitmap, 0)
         recognizer.process(inputImage)
             .addOnSuccessListener { text ->
                 val rawText = plateFilter.filterVisibleText(text, rotatedWidth, rotatedHeight)
@@ -910,5 +908,28 @@ private data class PlateEntry(
         yuvImage.compressToJpeg(Rect(0, 0, imageProxy.width, imageProxy.height), 80, out)
         val imageBytes = out.toByteArray()
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+    }
+
+    private fun enhanceContrast(source: Bitmap, contrast: Float): Bitmap {
+        if (contrast == 1f) return source
+        val result = Bitmap.createBitmap(
+            source.width,
+            source.height,
+            source.config ?: Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(result)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        val translate = 128f * (1f - contrast)
+        val colorMatrix = ColorMatrix(
+            floatArrayOf(
+                contrast, 0f, 0f, 0f, translate,
+                0f, contrast, 0f, 0f, translate,
+                0f, 0f, contrast, 0f, translate,
+                0f, 0f, 0f, 1f, 0f
+            )
+        )
+        paint.colorFilter = ColorMatrixColorFilter(colorMatrix)
+        canvas.drawBitmap(source, 0f, 0f, paint)
+        return result
     }
 }

@@ -1,6 +1,7 @@
 package com.application.ocr
 
 import android.graphics.Rect
+import android.os.SystemClock
 import com.google.mlkit.vision.text.Text
 import kotlin.math.max
 import kotlin.math.sqrt
@@ -10,7 +11,7 @@ class PlateFilter(
     private val maxPlateLength: Int,
     val minVerticalFraction: Float = 0.3f,
     val minHorizontalFraction: Float = 0.3f,
-    private val algorithmConfirmationThreshold: Int = 3
+    private val algorithmConfirmationThreshold: Int = 2
 ) {
 
     data class AlgorithmPrompt(val displayValue: String, val sanitizedValue: String)
@@ -26,6 +27,9 @@ class PlateFilter(
 
     private val algorithmDetectionCounts = mutableMapOf<String, Int>()
     private val algorithmPrompted = mutableSetOf<String>()
+    private val resetIntervalMs = 3_000L
+    private var lastCountsReset = SystemClock.elapsedRealtime()
+
     private val commonWords = setOf(
         "ALABAMA",
         "ALASKA",
@@ -80,9 +84,14 @@ class PlateFilter(
     ).map { sanitizePlateText(it) }.toSet()
 
     fun sanitizePlateText(text: String): String {
-        return text.uppercase()
-            .filter { it.isLetterOrDigit() }
-            .trim()
+        val builder = StringBuilder()
+        text.uppercase().forEach { ch ->
+            val mapped = substitutionMap[ch] ?: ch
+            if (mapped.isLetterOrDigit()) {
+                builder.append(mapped)
+            }
+        }
+        return builder.toString().trim()
     }
 
     fun updatePreviewSize(width: Int, height: Int) {
@@ -103,7 +112,7 @@ class PlateFilter(
             return result.text.takeIf { it.isNotBlank() }
         }
         val window = computeImageWindowBounds(imageWidth, imageHeight)
-        val linesInWindow = mutableListOf<String>()
+        val linesInWindow = mutableListOf<Pair<String, Int>>()
         result.textBlocks.forEach { block ->
             block.lines.forEach { line ->
                 val box = line.boundingBox ?: return@forEach
@@ -112,7 +121,10 @@ class PlateFilter(
                 if (centerY in window.top..window.bottom && centerX in window.left..window.right) {
                     val content = line.text.trim()
                     if (content.isNotEmpty()) {
-                        linesInWindow.add(content)
+                        val sanitized = sanitizePlateText(content)
+                        if (sanitized.isNotEmpty() && !commonWords.contains(sanitized)) {
+                            linesInWindow.add(content to box.height())
+                        }
                     }
                 }
             }
@@ -120,7 +132,7 @@ class PlateFilter(
         if (linesInWindow.isEmpty()) {
             return null
         }
-        return linesInWindow.joinToString(separator = "\n")
+        return linesInWindow.maxByOrNull { it.second }?.first
     }
 
     fun computeAlgorithmResult(result: Text, imageWidth: Int, imageHeight: Int): String? {
@@ -183,6 +195,7 @@ class PlateFilter(
         isAlreadyConfirmed: (String) -> Boolean
     ): AlgorithmPrompt? {
         if (rawResult.isNullOrBlank()) return null
+        maybeResetCounts()
         val sanitized = sanitizePlateText(rawResult)
         if (sanitized.isBlank()) {
             return null
@@ -213,6 +226,15 @@ class PlateFilter(
         val dx = cx - 0.5f
         val dy = cy - 0.5f
         return sqrt(dx * dx + dy * dy)
+    }
+
+    private fun maybeResetCounts() {
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastCountsReset >= resetIntervalMs) {
+            algorithmDetectionCounts.clear()
+            algorithmPrompted.clear()
+            lastCountsReset = now
+        }
     }
 
     private fun computeImageWindowBounds(imageWidth: Int, imageHeight: Int): NormalizedWindow {
@@ -281,4 +303,38 @@ class PlateFilter(
         val right: Float,
         val bottom: Float
     )
+
+    companion object {
+        private val substitutionMap = mapOf(
+            'Å' to 'A',
+            'Ä' to 'A',
+            'Á' to 'A',
+            'À' to 'A',
+            'Â' to 'A',
+            'Ã' to 'A',
+            'Æ' to 'A',
+            'Ç' to 'C',
+            'È' to 'E',
+            'É' to 'E',
+            'Ê' to 'E',
+            'Ë' to 'E',
+            'Ì' to 'I',
+            'Í' to 'I',
+            'Î' to 'I',
+            'Ï' to 'I',
+            'Ñ' to 'N',
+            'Ò' to 'O',
+            'Ó' to 'O',
+            'Ô' to 'O',
+            'Õ' to 'O',
+            'Ö' to 'O',
+            'Ø' to 'O',
+            'Ù' to 'U',
+            'Ú' to 'U',
+            'Û' to 'U',
+            'Ü' to 'U',
+            'Ý' to 'Y',
+            'Ÿ' to 'Y'
+        )
+    }
 }
