@@ -3,6 +3,7 @@ package com.application.ocr
 import android.graphics.Rect
 import android.os.SystemClock
 import com.google.mlkit.vision.text.Text
+import java.text.Normalizer
 import kotlin.math.max
 import kotlin.math.sqrt
 
@@ -84,11 +85,16 @@ class PlateFilter(
     ).map { sanitizePlateText(it) }.toSet()
 
     fun sanitizePlateText(text: String): String {
+        val normalized = Normalizer.normalize(text.uppercase(), Normalizer.Form.NFD)
         val builder = StringBuilder()
-        text.uppercase().forEach { ch ->
-            val mapped = substitutionMap[ch] ?: ch
-            if (mapped.isLetterOrDigit()) {
-                builder.append(mapped)
+        normalized.forEach { ch ->
+            if (Character.getType(ch) == Character.NON_SPACING_MARK.toInt()) {
+                return@forEach
+            }
+            val replacement = substitutionMap[ch]
+            when {
+                replacement != null -> builder.append(replacement)
+                ch.isLetterOrDigit() -> builder.append(ch)
             }
         }
         return builder.toString().trim()
@@ -306,35 +312,22 @@ class PlateFilter(
 
     companion object {
         private val substitutionMap = mapOf(
-            'Å' to 'A',
-            'Ä' to 'A',
-            'Á' to 'A',
-            'À' to 'A',
-            'Â' to 'A',
-            'Ã' to 'A',
-            'Æ' to 'A',
-            'Ç' to 'C',
-            'È' to 'E',
-            'É' to 'E',
-            'Ê' to 'E',
-            'Ë' to 'E',
-            'Ì' to 'I',
-            'Í' to 'I',
-            'Î' to 'I',
-            'Ï' to 'I',
-            'Ñ' to 'N',
-            'Ò' to 'O',
-            'Ó' to 'O',
-            'Ô' to 'O',
-            'Õ' to 'O',
-            'Ö' to 'O',
-            'Ø' to 'O',
-            'Ù' to 'U',
-            'Ú' to 'U',
-            'Û' to 'U',
-            'Ü' to 'U',
-            'Ý' to 'Y',
-            'Ÿ' to 'Y'
+            'Æ' to "AE",
+            'Ǽ' to "AE",
+            'Œ' to "OE",
+            'Ð' to "D",
+            'Þ' to "TH",
+            'ß' to "SS",
+            'Ø' to "O",
+            'Ł' to "L",
+            'Ŀ' to "L",
+            'Ļ' to "L",
+            'Ľ' to "L",
+            'Ĺ' to "L",
+            'Ḷ' to "L",
+            'Ḹ' to "L",
+            'Ḻ' to "L",
+            'Ḽ' to "L"
         )
     }
 }
