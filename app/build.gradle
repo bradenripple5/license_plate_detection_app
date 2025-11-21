@@ -1,0 +1,83 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.application.ocr'
+    compileSdk 34
+
+    buildFeatures{
+        viewBinding true
+    }
+
+    defaultConfig {
+        applicationId "com.application.ocr"
+        minSdk 25
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    packagingOptions {
+        pickFirst 'lib/x86/libc++_shared.so'
+        pickFirst 'lib/x86_64/libc++_shared.so'
+        pickFirst 'lib/arm64-v8a/libc++_shared.so'
+        pickFirst 'lib/armeabi-v7a/libc++_shared.so'
+    }
+    androidResources {
+        noCompress += "pt"
+        noCompress += "ptl"
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+
+    //Material Design
+    implementation 'com.google.android.material:material:1.11.0'
+
+    //ConstraintLayout
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    //Lottie
+    implementation "com.airbnb.android:lottie:4.1.0"
+
+    def camerax_version = "1.3.2"
+    implementation "androidx.camera:camera-core:$camerax_version"
+    implementation "androidx.camera:camera-camera2:$camerax_version"
+    implementation "androidx.camera:camera-lifecycle:$camerax_version"
+    implementation "androidx.camera:camera-view:1.3.2"
+
+    //OCR
+    implementation 'com.google.android.gms:play-services-mlkit-text-recognition:19.0.0'
+    implementation 'com.google.android.gms:play-services-vision:20.1.3'
+
+    //PyTorch Lite runtime ships all needed native libs inside the APK
+    implementation 'org.pytorch:pytorch_android_lite:1.13.1'
+    implementation 'org.pytorch:pytorch_android_torchvision_lite:1.13.1'
+
+    //PermissionX
+    implementation 'com.guolindev.permissionx:permissionx:1.7.1'
+
+    //Test
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}

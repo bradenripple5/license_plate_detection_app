@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">OCR</string>
+    <string name="copy">Copy</string>
+    <string name="share">Share</string>
+    <string name="live_text_label">Live OCR Result</string>
+    <string name="license_plate_label">Detected Plates</string>
+    <string name="no_license_plate_detected">No plates detected yet</string>
+    <string name="recent_strings_label">Recent Strings</string>
+    <string name="no_recent_strings">No strings detected in last 0.5 seconds</string>
+    <string name="confirm_plate_title">Confirm plate</string>
+    <string name="confirm_plate_message">Does this look correct: %1$s?</string>
+    <string name="confirm_plate_positive">Yes</string>
+    <string name="confirm_plate_negative">No</string>
+    <string name="confirm_plate_edit">Edit</string>
+    <string name="no_plates_to_share">No confirmed plates to share</string>
+    <string name="no_plate_to_remove">No confirmed plates to remove</string>
+    <string name="remove_plate_title">Remove plate</string>
+    <string name="invalid_plate_edit">Please enter a plate with 5-7 characters</string>
+    <string name="vertical_fov_slider_label">Vertical field of view</string>
+    <string name="horizontal_fov_slider_label">Horizontal field of view</string>
+    <string name="algorithm_result_label">Algorithm Result</string>
+    <string name="no_algorithm_result">No algorithm result yet</string>
+</resources>

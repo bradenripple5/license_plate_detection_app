@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".MainActivity">
+
+
+    <FrameLayout
+        android:id="@+id/previewContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintDimensionRatio="1:0.65"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.camera.view.PreviewView
+            android:id="@+id/previewView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/black" />
+
+        <com.application.ocr.FieldOfViewOverlay
+            android:id="@+id/fieldOfViewOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/verticalFovSliderContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/previewContainer">
+
+        <TextView
+            android:id="@+id/verticalFovSliderLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/vertical_fov_slider_label"
+            android:textColor="@color/black"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/verticalFovSlider"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:value="0"
+            android:valueFrom="0"
+            android:valueTo="1"
+            android:stepSize="0.05"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/horizontalFovSliderContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/verticalFovSliderContainer">
+
+        <TextView
+            android:id="@+id/horizontalFovSliderLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/horizontal_fov_slider_label"
+            android:textColor="@color/black"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/horizontalFovSlider"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:value="0"
+            android:valueFrom="0"
+            android:valueTo="1"
+            android:stepSize="0.05"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/resultCard"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="@android:color/white"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        app:layout_constraintBottom_toTopOf="@+id/btn_copy"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/horizontalFovSliderContainer">
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nestedScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:overScrollMode="never"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/licensePlateLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/license_plate_label"
+                    android:textAllCaps="true"
+                    android:textColor="@color/color_green"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/plateListTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/no_license_plate_detected"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    tools:text="ABC1234&#10;XYZ9876" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="12dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@android:color/transparent" />
+
+                <TextView
+                    android:id="@+id/liveTextLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/live_text_label"
+                    android:textAllCaps="true"
+                    android:textColor="@color/color_green"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/resultTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    tools:text="Live OCR output shown here." />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="12dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@android:color/transparent" />
+
+                <TextView
+                    android:id="@+id/algorithmResultLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/algorithm_result_label"
+                    android:textAllCaps="true"
+                    android:textColor="@color/color_green"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/algorithmResultTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/no_algorithm_result"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    tools:text="ABC1234" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="12dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@android:color/transparent" />
+
+                <TextView
+                    android:id="@+id/recentStringsLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/recent_strings_label"
+                    android:textAllCaps="true"
+                    android:textColor="@color/color_green"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/recentStringsTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/no_recent_strings"
+                    android:textAlignment="textStart"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    tools:text="ABC1234, XYZ7654" />
+            </LinearLayout>
+
+        </androidx.core.widget.NestedScrollView>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_copy"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="@color/color_green"
+        android:text="@string/copy"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        app:icon="@drawable/ic_copy"
+        app:cornerRadius="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/btn_send"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_send"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="@color/color_green"
+        android:text="@string/share"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        app:cornerRadius="6dp"
+        app:icon="@drawable/ic_send"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
