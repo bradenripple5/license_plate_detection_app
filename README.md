@@ -8,8 +8,10 @@ An OCR application for android using Google ML kit
 
 Gradle
 ```kotlin
+implementation 'com.google.mlkit:text-recognition:16.0.1'
+
 implementation 'com.google.android.gms:play-services-mlkit-text-recognition:18.0.2'
-implementation 'com.google.android.gms:play-services-vision:20.1.3'
+implementation 'com.google.android.gms:play-services-vision:20.1.3';
 ```
 
 Manifest

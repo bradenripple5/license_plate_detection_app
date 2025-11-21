@@ -2,4 +2,7 @@
     <string name="app_name">OCR</string>
     <string name="copy">Copy</string>
     <string name="share">Share</string>
+    <string name="live_text_label">Live OCR Result</string>
+    <string name="license_plate_label">Detected Plates</string>
+    <string name="no_license_plate_detected">No plates detected yet</string>
 </resources>
