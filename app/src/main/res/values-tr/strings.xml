@@ -2,7 +2,6 @@
     <string name="app_name">OCR</string>
     <string name="copy">Kopyala</string>
     <string name="share">Paylaş</string>
-    <string name="recent_strings_label">Son Metinler</string>
     <string name="confirm_plate_title">Plakayı Onayla</string>
     <string name="confirm_plate_message">Bu doğru mu: %1$s?</string>
     <string name="confirm_plate_positive">Evet</string>
@@ -14,6 +13,7 @@
     <string name="invalid_plate_edit">Lütfen 5-7 karakterlik plaka girin</string>
     <string name="vertical_fov_slider_label">Field of view</string>
     <string name="horizontal_fov_slider_label">Field of view</string>
-    <string name="algorithm_result_label">Algorithm Result</string>
-    <string name="no_algorithm_result">No algorithm result yet</string>
+    <string name="manual_add_button">Manuel Ekle</string>
+    <string name="manual_add_title">Plakayı manuel ekle</string>
+    <string name="manual_add_hint">Plaka metnini girin</string>
 </resources>

@@ -13,7 +13,6 @@ import android.graphics.YuvImage
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.SystemClock
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -52,7 +51,6 @@ class MainActivity : AppCompatActivity() {
 
     private val permanentPlateMap = LinkedHashMap<String, PlateEntry>()
     private val windowCounts = LinkedHashMap<String, WindowPlateEntry>()
-    private val recentDetections = mutableListOf<Pair<Long, String>>()
     private val minPlateLength = 5
     private val maxPlateLength = 7
     private val maxZoomSteps = 6
@@ -76,7 +74,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val windowIntervalMs = 300L
-    private val recentStringsRetentionMs = 5_000L
     private val windowHandler = Handler(Looper.getMainLooper())
     private val windowEvaluator = object : Runnable {
         override fun run() {
@@ -141,7 +138,10 @@ class MainActivity : AppCompatActivity() {
                 val payload = buildPlateShareList()
                 shareText(payload)
             }
-
+            manualAddButton.onVibrationClick {
+                showManualAddDialog()
+            }
+          /*
             verticalFovSlider.value = fractionToSliderValue(plateFilter.verticalFraction, plateFilter.minVerticalFraction)
             verticalFovSlider.addOnChangeListener { _, value, _ ->
                 val fraction = sliderValueToFraction(value, plateFilter.minVerticalFraction)
@@ -153,7 +153,7 @@ class MainActivity : AppCompatActivity() {
                 val fraction = sliderValueToFraction(value, plateFilter.minHorizontalFraction)
                 updateHorizontalFraction(fraction)
             }
-
+                   */
             updateVerticalFraction(plateFilter.verticalFraction)
             updateHorizontalFraction(plateFilter.horizontalFraction)
         }
@@ -548,13 +548,6 @@ class MainActivity : AppCompatActivity() {
         return Bitmap.createBitmap(source, left, top, width, height)
     }
 
-    private fun recordRawFrameResult(rawText: String) {
-        val now = SystemClock.elapsedRealtime()
-        recentDetections.add(now to rawText)
-        pruneRecentDetections(now)
-        refreshRecentStringsText(now)
-    }
-
     private fun incrementWindowCount(detection: PlateDetection) {
         val sanitized = detection.text.trim()
         if (sanitized.isEmpty()) return
@@ -607,31 +600,8 @@ class MainActivity : AppCompatActivity() {
         updateDetectionRankingText()
     }
 
-    private fun pruneRecentDetections(now: Long = SystemClock.elapsedRealtime()) {
-        val cutoff = now - recentStringsRetentionMs
-        while (recentDetections.isNotEmpty() && recentDetections.first().first < cutoff) {
-            recentDetections.removeAt(0)
-        }
-    }
-
-    private fun refreshRecentStringsText(now: Long = SystemClock.elapsedRealtime()) {
-        pruneRecentDetections(now)
-        val text = if (recentDetections.isEmpty()) {
-            getString(R.string.no_recent_strings)
-        } else {
-            recentDetections.joinToString(separator = "\n") { it.second }
-        }
-        binding.recentStringsTextView.text = text
-    }
-
     private fun postRawText(rawText: String?) {
         scannedText = rawText
-        if (rawText != null) {
-            binding.resultTextView.text = rawText
-            recordRawFrameResult(rawText)
-        } else {
-            binding.resultTextView.text = getString(R.string.no_license_plate_detected)
-        }
     }
 
     private fun sliderValueToFraction(value: Float, minFraction: Float): Float {
@@ -657,7 +627,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun postAlgorithmResult(result: String?) {
-        binding.algorithmResultTextView.text = result ?: getString(R.string.no_algorithm_result)
         val prompt = plateFilter.registerAlgorithmResult(result) { plate ->
             confirmedPlates.contains(plate)
         }
@@ -675,18 +644,15 @@ class MainActivity : AppCompatActivity() {
                 .setMessage(getString(R.string.confirm_plate_message, sanitizedValue))
                 .setPositiveButton(R.string.confirm_plate_positive) { _, _ ->
                     confirmDetectedPlate(sanitizedValue)
-                    plateFilter.resetCandidate(sanitizedValue)
                     algorithmConfirmShowing = false
                 }
                 .setNegativeButton(R.string.confirm_plate_negative) { _, _ ->
-                    plateFilter.resetCandidate(sanitizedValue)
                     algorithmConfirmShowing = false
                 }
                 .setNeutralButton(R.string.confirm_plate_edit) { _, _ ->
                     showAlgorithmEditDialog(sanitizedValue)
                 }
                 .setOnCancelListener {
-                    plateFilter.resetCandidate(sanitizedValue)
                     algorithmConfirmShowing = false
                 }
                 .show()
@@ -707,17 +673,33 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     showToast(getString(R.string.invalid_plate_edit))
                 }
-                plateFilter.resetCandidate(initialValue)
                 algorithmConfirmShowing = false
             }
             .setNegativeButton(android.R.string.cancel) { _, _ ->
-                plateFilter.resetCandidate(initialValue)
                 algorithmConfirmShowing = false
             }
             .setOnCancelListener {
-                plateFilter.resetCandidate(initialValue)
                 algorithmConfirmShowing = false
             }
+            .show()
+    }
+
+    private fun showManualAddDialog() {
+        val editInput = android.widget.EditText(this).apply {
+            hint = getString(R.string.manual_add_hint)
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.manual_add_title)
+            .setView(editInput)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                val sanitized = plateFilter.sanitizePlateText(editInput.text.toString())
+                if (sanitized.length in minPlateLength..maxPlateLength) {
+                    confirmDetectedPlate(sanitized)
+                } else {
+                    showToast(getString(R.string.invalid_plate_edit))
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
             .show()
     }
 

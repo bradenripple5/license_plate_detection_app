@@ -1,7 +1,6 @@
 package com.application.ocr
 
 import android.graphics.Rect
-import android.os.SystemClock
 import com.google.mlkit.vision.text.Text
 import java.text.Normalizer
 import kotlin.math.max
@@ -28,8 +27,6 @@ class PlateFilter(
 
     private val algorithmDetectionCounts = mutableMapOf<String, Int>()
     private val algorithmPrompted = mutableSetOf<String>()
-    private val resetIntervalMs = 3_000L
-    private var lastCountsReset = SystemClock.elapsedRealtime()
 
     private val commonWords = setOf(
         "ALABAMA",
@@ -201,7 +198,6 @@ class PlateFilter(
         isAlreadyConfirmed: (String) -> Boolean
     ): AlgorithmPrompt? {
         if (rawResult.isNullOrBlank()) return null
-        maybeResetCounts()
         val sanitized = sanitizePlateText(rawResult)
         if (sanitized.isBlank()) {
             return null
@@ -221,6 +217,10 @@ class PlateFilter(
         return null
     }
 
+    fun currentDetectionCounts(): Map<String, Int> {
+        return algorithmDetectionCounts.toMap()
+    }
+
     fun resetCandidate(sanitized: String) {
         algorithmDetectionCounts.remove(sanitized)
         algorithmPrompted.remove(sanitized)
@@ -232,15 +232,6 @@ class PlateFilter(
         val dx = cx - 0.5f
         val dy = cy - 0.5f
         return sqrt(dx * dx + dy * dy)
-    }
-
-    private fun maybeResetCounts() {
-        val now = SystemClock.elapsedRealtime()
-        if (now - lastCountsReset >= resetIntervalMs) {
-            algorithmDetectionCounts.clear()
-            algorithmPrompted.clear()
-            lastCountsReset = now
-        }
     }
 
     private fun computeImageWindowBounds(imageWidth: Int, imageHeight: Int): NormalizedWindow {
